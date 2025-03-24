@@ -9,10 +9,10 @@ app = FastAPI()
 create_table()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  
+    allow_origins=["*"],  
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  
-    allow_headers=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 model.Base.metadata.create_all(bind=engine)
 
@@ -51,19 +51,18 @@ def update_book(book_id: int, book: schemas.BookCreate, db: Session = Depends(ge
     if not existing_book:
         raise HTTPException(status_code=404, detail="Book not found")
     
-    # Update the existing book fields
     for key, value in book.dict().items():
         setattr(existing_book, key, value)
 
     db.commit()
     db.refresh(existing_book)
     return existing_book
-@app.delete("/del",response_model=schemas.Book)
-def delete_book(book_id:int,db:Session=Depends(get_db)):
-    book = db.query(model.Book).filter(model.Book.id == book_id).first()
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
+@app.delete("/books/{book_id}")
+async def delete_book(book_id: int):
+    global books_db
+    for book in books_db:
+        if book["id"] == book_id:
+            books_db = [b for b in books_db if b["id"] != book_id]
+            return {"message": "Book deleted successfully"}
     
-    db.delete(book)
-    db.commit()
-    return book
+    raise HTTPException(status_code=404, detail="Book not found")

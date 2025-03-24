@@ -1,36 +1,38 @@
 import { useEffect, useState } from "react";
 
+// Fetching, deleting, updating, and adding books
 async function getBooks() {
     try {
         const response = await fetch("http://127.0.0.1:8000/books");
         if (!response.ok) {
             throw new Error("Network response was not ok");
         }
-        return await response.json(); 
+        return await response.json();
     } catch (error) {
         console.error("Error fetching books:", error);
         throw error;
     }
 }
 
-
 async function deleteBook(bookId) {
     try {
         const response = await fetch(`http://127.0.0.1:8000/books/${bookId}`, {
             method: "DELETE",
         });
+
         if (!response.ok) {
             throw new Error("Failed to delete the book");
         }
+
+        return await response.json();
     } catch (error) {
         console.error("Error deleting book:", error);
     }
 }
 
-
 async function updateBook(bookId, updatedBook) {
     try {
-        const response = await fetch(`http://127.0.0.1:8000/books/${bookId}`, {
+        const response = await fetch(`http://127.0.0.1:8000/book/${bookId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -40,11 +42,11 @@ async function updateBook(bookId, updatedBook) {
         if (!response.ok) {
             throw new Error("Failed to update the book");
         }
+        return await response.json();  
     } catch (error) {
         console.error("Error updating book:", error);
     }
 }
-
 
 async function addBook(newBook) {
     try {
@@ -96,8 +98,8 @@ function Books() {
     };
 
     const handleEditChange = (e) => {
-        setNewBook({
-            ...newBook,
+        setEditingBook({
+            ...editingBook,
             [e.target.name]: e.target.value,
         });
     };
@@ -117,15 +119,15 @@ function Books() {
 
     const handleEditSubmit = (e) => {
         e.preventDefault();
-        updateBook(editingBook.id, newBook)
-            .then(() => {
+        updateBook(editingBook.id, editingBook)
+            .then((updatedBook) => {
                 setBooks((prevBooks) =>
                     prevBooks.map((book) =>
-                        book.id === editingBook.id ? { ...editingBook, ...newBook } : book
+                        book.id === updatedBook.id ? { ...book, ...updatedBook } : book
                     )
                 );
-                setEditingBook(null);
-                setNewBook({ title: "", author: "", description: "", year: "" });
+                setEditingBook(null);  // Reset editing state
+                setIsModalOpen(false); // Close the modal after edit
             })
             .catch((error) => {
                 console.error("Error updating book:", error);
@@ -145,51 +147,49 @@ function Books() {
     return (
         <div className="container">
             <h1 className="title">Book List</h1>
-
-            {/* Add Book Button */}
             <button onClick={() => setIsModalOpen(true)} className="add-book-btn">
                 Add Book
             </button>
 
-            {/* Add Book Modal */}
+            {/* Modal for Adding or Editing Book */}
             {isModalOpen && (
                 <div className="modal">
                     <div className="modal-content">
-                        <h2>Add New Book</h2>
-                        <form onSubmit={handleSubmit}>
+                        <h2>{editingBook ? "Edit Book" : "Add New Book"}</h2>
+                        <form onSubmit={editingBook ? handleEditSubmit : handleSubmit}>
                             <label>Title</label>
                             <input
                                 type="text"
                                 name="title"
-                                value={newBook.title}
-                                onChange={handleChange}
+                                value={editingBook?.title || newBook.title}
+                                onChange={editingBook ? handleEditChange : handleChange}
                                 required
                             />
                             <label>Author</label>
                             <input
                                 type="text"
                                 name="author"
-                                value={newBook.author}
-                                onChange={handleChange}
+                                value={editingBook?.author || newBook.author}
+                                onChange={editingBook ? handleEditChange : handleChange}
                                 required
                             />
                             <label>Description</label>
                             <textarea
                                 name="description"
-                                value={newBook.description}
-                                onChange={handleChange}
+                                value={editingBook?.description || newBook.description}
+                                onChange={editingBook ? handleEditChange : handleChange}
                                 required
                             />
                             <label>Year</label>
                             <input
                                 type="number"
                                 name="year"
-                                value={newBook.year}
-                                onChange={handleChange}
+                                value={editingBook?.year || newBook.year}
+                                onChange={editingBook ? handleEditChange : handleChange}
                                 required
                             />
                             <button type="submit" className="submit-btn">
-                                Add Book
+                                {editingBook ? "Update Book" : "Add Book"}
                             </button>
                         </form>
                         <button onClick={() => setIsModalOpen(false)} className="close-btn">
@@ -219,7 +219,7 @@ function Books() {
                                 <td>{book.description}</td>
                                 <td>{book.year}</td>
                                 <td>
-                                    <button onClick={() => setEditingBook(book)} className="edit-btn">
+                                    <button onClick={() => { setEditingBook(book); setIsModalOpen(true); }} className="edit-btn">
                                         Edit
                                     </button>
                                     <button onClick={() => handleDelete(book.id)} className="delete-btn">
