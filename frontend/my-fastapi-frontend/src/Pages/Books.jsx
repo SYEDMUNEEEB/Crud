@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-// Fetching, deleting, updating, and adding books
 async function getBooks() {
     try {
         const response = await fetch("http://127.0.0.1:8000/books");
@@ -126,8 +125,8 @@ function Books() {
                         book.id === updatedBook.id ? { ...book, ...updatedBook } : book
                     )
                 );
-                setEditingBook(null);  // Reset editing state
-                setIsModalOpen(false); // Close the modal after edit
+                setEditingBook(null);  
+                setIsModalOpen(false);
             })
             .catch((error) => {
                 console.error("Error updating book:", error);
@@ -151,7 +150,7 @@ function Books() {
                 Add Book
             </button>
 
-            {/* Modal for Adding or Editing Book */}
+         
             {isModalOpen && (
                 <div className="modal">
                     <div className="modal-content">
@@ -199,7 +198,7 @@ function Books() {
                 </div>
             )}
 
-            {/* Book List */}
+      
             {books?.length > 0 ? (
                 <table className="book-table">
                     <thead>
