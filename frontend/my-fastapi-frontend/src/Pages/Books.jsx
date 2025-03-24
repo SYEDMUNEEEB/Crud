@@ -27,7 +27,7 @@ async function deleteBook(bookId) {
     }
 }
 
-// Function to update a book
+
 async function updateBook(bookId, updatedBook) {
     try {
         const response = await fetch(`http://127.0.0.1:8000/books/${bookId}`, {
